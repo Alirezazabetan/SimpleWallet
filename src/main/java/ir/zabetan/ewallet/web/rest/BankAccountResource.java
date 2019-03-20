@@ -70,7 +70,7 @@ public class BankAccountResource {
             @ApiResponse(code = 200, message = "Successful"),
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
-    @PostMapping("/withdraw")
+    @PutMapping("/withdraw")
     public ResponseEntity<BankAccount> withdraw(@Valid @RequestBody RequestModifyDTO RequestModifyDTO) throws Exception {
         log.info("REST request to withdraw from the bankAccount : {}", RequestModifyDTO);
         BankAccount result = bankAccountService.withdraw(RequestModifyDTO);

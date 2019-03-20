@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import ir.zabetan.ewallet.domain.BankAccount;
 import ir.zabetan.ewallet.repository.BankAccountRepository;
-import ir.zabetan.ewallet.service.BankAccountService;
+import ir.zabetan.ewallet.service.dto.CreateBankAccountReqDTO;
 import ir.zabetan.ewallet.service.dto.RequestModifyDTO;
 import ir.zabetan.ewallet.web.rest.BankAccountResource;
 import org.junit.Before;
@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -37,8 +38,7 @@ public class BankAccountRestApplicationTests {
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
-    @Autowired
-    private BankAccountService bankAccountService;
+
 
     @Autowired
     private BankAccountRepository bankAccountRepository;
@@ -58,66 +58,74 @@ public class BankAccountRestApplicationTests {
 
     public BankAccount createEntity() {
         return new BankAccount()
-                .phoneNumber("09123334455")
+                .phoneNumber("0123334455")
                 .balance(88888);
+    }
+
+    public CreateBankAccountReqDTO createDTOEntity() {
+        CreateBankAccountReqDTO acc = new CreateBankAccountReqDTO();
+        acc.setPhoneNumber(bankAccount.getPhoneNumber());
+        acc.setBalance(bankAccount.getBalance());
+        return acc;
     }
 
     @Test
     public void createAccount() throws Exception {
         int databaseSizeBeforeCreate = bankAccountRepository.findAll().size();
 
+        CreateBankAccountReqDTO acc = new CreateBankAccountReqDTO();
+        acc.setPhoneNumber(bankAccount.getPhoneNumber());
+        acc.setBalance(bankAccount.getBalance());
         restAccountMockMvc.perform(post("/api/create")
                 .contentType(APPLICATION_JSON_UTF8)
-                .content(convertObjectToJsonBytes(bankAccount)))
+                .content(convertObjectToJsonBytes(acc)))
                 .andExpect(status().isCreated());
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAll();
         assertThat(bankAccounts).hasSize(databaseSizeBeforeCreate + 1);
         BankAccount bankAccountTest = bankAccounts.get(bankAccounts.size() - 1);
-        assertThat(bankAccountTest.getPhoneNumber()).isEqualTo("09123334455");
+        assertThat(bankAccountTest.getPhoneNumber()).isEqualTo("0123334455");
         assertThat(bankAccountTest.getBalance().longValue()).isEqualTo(88888L);
 
-        bankAccountRepository.delete(bankAccount);
+        bankAccountRepository.deleteById(bankAccounts.get(0).getAccountNum());
     }
 
     @Test
-    public void increaseRuleGroup() throws Exception {
+    public void top_up() throws Exception {
         bankAccountRepository.save(bankAccount);
         RequestModifyDTO requestIncreaseDTO = new RequestModifyDTO();
         requestIncreaseDTO.setPhoneNumber(bankAccount.getPhoneNumber());
         requestIncreaseDTO.setBalance(11111);
 
-        restAccountMockMvc.perform(post("/api/deposit")
+        restAccountMockMvc.perform(put("/api/top-up")
                 .contentType(APPLICATION_JSON_UTF8)
                 .content(convertObjectToJsonBytes(requestIncreaseDTO)))
                 .andExpect(status().isCreated());
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAll();
-//		assertThat(bankAccounts).hasSize(databaseSizeBeforeCreate + 1);
         BankAccount bankAccountTest = bankAccounts.get(0);
-        assertThat(bankAccountTest.getPhoneNumber()).isEqualTo("09123334455");
+        assertThat(bankAccountTest.getPhoneNumber()).isEqualTo("0123334455");
         assertThat(bankAccountTest.getBalance().longValue()).isEqualTo(99999L);
 
-        bankAccountRepository.delete(bankAccount);
+        bankAccountRepository.deleteById(bankAccounts.get(0).getAccountNum());
     }
 
 
     @Test
-    public void decreaseRuleGroup() throws Exception {
+    public void withdraw() throws Exception {
         bankAccountRepository.save(bankAccount);
         RequestModifyDTO requestModifyDTO = new RequestModifyDTO();
         requestModifyDTO.setPhoneNumber(bankAccount.getPhoneNumber());
         requestModifyDTO.setBalance(11111);
 
-        restAccountMockMvc.perform(post("/api/withdraw")
+        restAccountMockMvc.perform(put("/api/withdraw")
                 .contentType(APPLICATION_JSON_UTF8)
                 .content(convertObjectToJsonBytes(requestModifyDTO)))
                 .andExpect(status().is(201));
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAll();
-//		assertThat(bankAccounts).hasSize(databaseSizeBeforeCreate + 1);
         BankAccount bankAccountTest = bankAccounts.get(0);
-        assertThat(bankAccountTest.getPhoneNumber()).isEqualTo("09123334455");
+        assertThat(bankAccountTest.getPhoneNumber()).isEqualTo("0123334455");
         assertThat(bankAccountTest.getBalance().longValue()).isEqualTo(77777L);
 
         bankAccountRepository.delete(bankAccount);

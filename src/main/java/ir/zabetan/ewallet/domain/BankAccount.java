@@ -13,7 +13,7 @@ public class BankAccount {
     @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
-    private int accountNum;
+    private long accountNum;
 
     @Column(unique=true)
     private String phoneNumber;
@@ -60,11 +60,11 @@ public class BankAccount {
         this.balance = new BigDecimal(balance);
     }
 
-    public int getAccountNum() {
+    public long getAccountNum() {
         return accountNum;
     }
 
-    public void setAccountNum(int accountNum) {
+    public void setAccountNum(long accountNum) {
         this.accountNum = accountNum;
     }
 
@@ -87,8 +87,11 @@ public class BankAccount {
     @Override
     public String toString() {
         return "BankAccount{" +
-                ", phoneNumber='" + getPhoneNumber() + '\'' +
-                ", balance=" + getBalance() +
+                "accountNum=" + accountNum +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", balance=" + balance +
+                ", threshold=" + threshold +
+                ", thresholdDate=" + thresholdDate +
                 '}';
     }
 }
